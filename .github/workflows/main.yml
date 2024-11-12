@@ -1,0 +1,56 @@
+name: Docker Image CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: self-hosted  # Use your self-hosted runner
+    steps:
+      # Check out the repository
+      - uses: actions/checkout@v4
+
+      # Build Docker image
+      - name: Build the Docker image
+        run: docker build -f SampleAPI/Dockerfile -t my-image-name:latest SampleAPI
+
+      # Run Docker container locally on the runner (for testing)
+      - name: Run Docker container locally (for testing)
+        run: |
+          # Check if there's an existing container using port 80
+          CONTAINER_ID=$(docker ps -q --filter "publish=80")
+          if [ -n "$CONTAINER_ID" ]; then
+            docker stop $CONTAINER_ID
+            docker rm $CONTAINER_ID
+          fi
+          # Run the new container
+          docker run -d -p 80:80 --name my-app-container my-image-name:latest
+      # Show logs if the container fails to run
+      - name: Show Docker container logs
+        if: failure()
+        run: docker logs $(docker ps -ql)
+
+  deploy:
+    runs-on: self-hosted  # Use your self-hosted runner
+    needs: build
+    steps:
+      # Check out the repository
+      - uses: actions/checkout@v4
+
+      # Stop and remove any existing container with the same name
+      - name: Stop and remove any existing container using port 80
+        run: |
+          # Find the container using port 80
+          CONTAINER_ID=$(docker ps -q --filter "publish=80")
+          if [ -n "$CONTAINER_ID" ]; then
+            docker stop $CONTAINER_ID
+            docker rm $CONTAINER_ID
+          fi
+      # Deploy the Docker container
+      - name: Deploy the Docker container
+        run: |
+          # Run the new container on port 80
+          docker run -d -p 80:80 --name my-app-container my-image-name:latest
