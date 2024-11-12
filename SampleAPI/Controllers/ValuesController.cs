@@ -10,7 +10,7 @@ namespace SampleAPI.Controllers
         [HttpGet("test-one")]
         public IActionResult TestOne()
         {
-            return Ok("TestOne response ok ");
+            return Ok("Succefully");
         }
     }
 
