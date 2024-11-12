@@ -53,4 +53,4 @@ jobs:
       - name: Deploy the Docker container
         run: |
           # Run the new container on port 80
-          docker run -d -p 80:80 --name my-app-container my-image-name:latest
+          docker run -d -p 80:80 --restart unless-stopped --name my-app-container my-image-name:latest
